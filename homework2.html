@@ -1,0 +1,229 @@
+<html>
+  <head>
+  	<style>
+  	  table{
+  	  	border: none;
+		    text-align: center;
+		    width: 400px;
+		    margin-left: auto;
+		    margin-right: auto;
+		    margin-top: 150px;
+  	  }
+  	</style>
+	  
+  </head>
+  <body>
+    <form accept-charset=utf-8>
+      <table cellspacing="20">
+        <tr>
+          <td>
+            Enter URL for Company List XML File
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <input type="text" name="xml_file" id='xml_file' onkeydown="testForEnter(event);">
+          <td>
+        </tr>
+        <tr>
+          <td>
+            <input type="button" id='submit_button' value= 'Submit Query' onclick='extractXml(event)'>
+          </td>
+        </tr>
+      </table>
+    </form>
+    <script>
+      var xmlhttp;
+            
+      function testForEnter(event) {    
+        if (event.keyCode == 13) { 
+          event.preventDefault();       
+        }
+      } 
+      if (window.XMLHttpRequest) {
+          // code for modern browsers
+          xmlhttp = new XMLHttpRequest();
+       } else {
+          // code for old IE browsers
+          xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+      }
+
+      function extractXml(e){
+        var xml_file = document.getElementById("xml_file").value
+        if( xml_file == ''){
+          alert('Please select a file.');
+          e.preventDefault();
+        }
+        else if(xml_file.indexOf('.xml') == -1){
+          alert('Please enter a valid xml file');
+          e.preventDefault();
+        }
+        else{
+          try{
+            xmlhttp.open("GET",xml_file,false);
+            xmlhttp.send(null);
+          } catch(error){
+            alert('Cannot find '+ xml_file);
+            return;
+          }
+          // xmlDoc=xmlhttp.responseXML;
+          // createHtmlContent();
+        }
+      };
+
+      xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.status == 200 && xmlhttp.readyState == 4 ) {
+          html = createHtmlContent(xmlhttp.responseXML);
+            if(html != null){
+              var newWindow = window.open("", "", "width=1000, height=800, scrollbars=yes");
+              newWindow.document.write(html);
+          }
+        } 
+        else if(xmlhttp.status == 404 && xmlhttp.readyState == 4 ){
+          alert('File not found');
+        }
+      };
+
+      function createHtmlContent(xmlDoc){
+        if(xmlDoc == null)
+        {
+          alert("Invalid XML");
+          return;
+        }
+        text = "<table border='2' width=1000px height=800px>";
+
+        var header_content = xmlDoc.getElementsByTagName("Header")[0];
+        
+        if(header_content == null || header_content.length < 1){
+          alert('Invalid XML');
+          return;
+        }
+
+        var data_content = xmlDoc.getElementsByTagName("Data");
+
+        if(data_content == null || data_content.length != 6){
+          alert('Invalid XML file');
+          return;
+        }
+        text += "<tr>"
+        for (i=0; i<data_content.length; i++){ 
+          text += "<th>";
+          text += data_content[i].childNodes[0].nodeValue;
+          text += "</th>";
+        }
+
+        var row_content = xmlDoc.getElementsByTagName("Row");
+        
+        if(row_content == null || row_content.length < 1){
+          alert('There are no rows in the file.');
+          return;
+        }
+
+        for (i=0; i<row_content.length; i++){ 
+          text += "<tr>"
+
+          text += "<td>";
+          callsign_content = row_content[i].getElementsByTagName("CallSign")
+          if(callsign_content!=null && callsign_content.length >=1 ){
+            try{
+              text += callsign_content[0].childNodes[0].nodeValue;  
+            }catch(e){}
+          }
+          else{
+            alert('Invalid XML');
+            return null;
+          }
+          text += "</td>";
+          
+          text += "<td>";
+          frequency_content = row_content[i].getElementsByTagName("Frequency")
+          if(frequency_content!=null && frequency_content.length >=1 ){
+            try{
+              text += frequency_content[0].childNodes[0].nodeValue;  
+            }catch(e){}
+          }
+          else{
+            alert('Invalid XML');
+            return null;
+          }
+          text += "</td>"
+
+          location_content = row_content[i].getElementsByTagName("Location")
+          if(location_content!=null && location_content.length >=1 ){
+            text += "<td>";
+            city_content = location_content[0].getElementsByTagName("City")
+            school_content = location_content[0].getElementsByTagName("School")
+            
+            if((city_content != null && city_content.length >= 1) && (school_content != null && school_content.length >= 1) ){
+              try{
+                text += "<ul><li>" + city_content[0].childNodes[0].nodeValue + "</li>";
+                text += "<li>" + school_content[0].childNodes[0].nodeValue + "</li></ul>";
+              }catch(e){}
+            } 
+            else if(city_content != null && city_content.length >= 1){
+              try{
+                text += "<ul><li>" + city_content[0].childNodes[0].nodeValue + "</li>";
+              }catch(e){}
+            } 
+            else if(school_content != null && school_content.length >= 1){
+              try{
+                text += "<ul><li>" + school_content[0].childNodes[0].nodeValue + "</li>";
+              }catch(e){}
+            }
+            text += "</td>";
+          }
+          else{
+            alert('Invalid XML');
+            return null;
+          }
+          
+          text += "<td>";
+          format_content = row_content[i].getElementsByTagName("Format");
+          if(format_content!=null && format_content.length >=1 ){
+            try{
+              text += format_content[0].childNodes[0].nodeValue;  
+            }catch(e){}
+          }
+          else{
+            alert('Invalid XML');
+            return null;
+          }
+          text += "</td>"
+
+          
+          text += "<td>";
+          homepage_content = row_content[i].getElementsByTagName("HomePage");
+          if(homepage_content!=null && homepage_content.length >=1 ){
+            try{
+              text += "<a href=" + homepage_content[0].childNodes[0].nodeValue + "/>" + homepage_content[0].childNodes[0].nodeValue;  
+            }catch(e){}
+          }
+          else{
+            alert('Invalid XML');
+            return null;
+          }
+          text += "</td>";
+          
+          text += "<td>";
+          logo_content = row_content[i].getElementsByTagName("Logo");
+          if(logo_content!=null && logo_content.length >=1 ){
+            try{
+              text += "<img style='width: 100%;' alt='No image URL present' src='" + logo_content[0].childNodes[0].nodeValue + "'/>";  
+            }catch(e){}
+          }
+          else{
+            alert('Invalid XML');
+            return null;
+          }
+
+          text += "</td></tr>"
+        }
+
+        text +="</table>";
+        return text;
+      
+      };
+    </script>
+    <noscript>
+  </body>
+</html>
